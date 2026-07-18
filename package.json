@@ -1,0 +1,10 @@
+{
+  "name": "bot-cumbre-2026",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Bot de WhatsApp para convencion - busqueda de vuelos por nombre (Cloud API + Vercel + Google Sheets)",
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}

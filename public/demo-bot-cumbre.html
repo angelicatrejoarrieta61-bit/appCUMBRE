@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Demo · Bot Cumbre 2026 AT&T</title>
+<style>
+  :root{
+    --wa-bg:#0b141a;
+    --wa-panel:#111b21;
+    --wa-header:#202c33;
+    --wa-in:#202c33;
+    --wa-out:#005c4b;
+    --wa-accent:#00a884;
+    --wa-text:#e9edef;
+    --wa-sub:#8696a0;
+    --wa-chat-bg:#0b141a;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{
+    font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    background:linear-gradient(135deg,#0e1b2a 0%,#1a2f45 50%,#0e1b2a 100%);
+    min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .demo-label{
+    position:fixed;top:16px;left:50%;transform:translateX(-50%);
+    color:#7fb3d5;font-size:12px;letter-spacing:2px;text-transform:uppercase;opacity:.7;z-index:5;
+  }
+  .phone{
+    width:390px;max-width:100%;height:800px;max-height:calc(100vh - 48px);
+    background:var(--wa-panel);border-radius:36px;overflow:hidden;display:flex;flex-direction:column;
+    box-shadow:0 30px 80px rgba(0,0,0,.6),0 0 0 10px #1c1c1e,0 0 0 12px #333;position:relative;
+  }
+  /* Header */
+  .wa-header{
+    background:var(--wa-header);padding:14px 16px 12px;display:flex;align-items:center;gap:12px;flex-shrink:0;
+  }
+  .wa-avatar{
+    width:40px;height:40px;border-radius:50%;flex-shrink:0;
+    background:linear-gradient(135deg,#ff8a00,#e52e71);
+    display:flex;align-items:center;justify-content:center;font-size:20px;
+  }
+  .wa-title{flex:1;min-width:0}
+  .wa-title h1{color:var(--wa-text);font-size:16px;font-weight:500;display:flex;align-items:center;gap:5px}
+  .wa-title h1 svg{flex-shrink:0}
+  .wa-title p{color:var(--wa-sub);font-size:12.5px;margin-top:1px}
+  .wa-icons{display:flex;gap:22px;color:var(--wa-sub)}
+  /* Chat */
+  .chat{
+    flex:1;overflow-y:auto;padding:14px 12px 8px;
+    background:var(--wa-chat-bg);
+    background-image:radial-gradient(rgba(255,255,255,.025) 1px,transparent 1px);
+    background-size:22px 22px;
+    scroll-behavior:smooth;
+  }
+  .day-chip{
+    align-self:center;text-align:center;margin:4px auto 12px;width:fit-content;
+    background:#182229;color:var(--wa-sub);font-size:12px;padding:5px 12px;border-radius:8px;
+  }
+  .msg{
+    max-width:82%;padding:7px 9px 6px;border-radius:9px;margin-bottom:6px;
+    color:var(--wa-text);font-size:14.3px;line-height:1.4;position:relative;
+    white-space:pre-wrap;word-wrap:break-word;
+    animation:pop .18s ease-out;
+  }
+  @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.98)}to{opacity:1;transform:none}}
+  .msg.in{background:var(--wa-in);border-top-left-radius:2px;margin-right:auto}
+  .msg.out{background:var(--wa-out);border-top-right-radius:2px;margin-left:auto}
+  .msg .time{
+    display:inline-block;float:right;margin:8px 0 0 10px;font-size:11px;color:rgba(233,237,239,.55);
+  }
+  .msg.out .time::after{content:" ✓✓";color:#53bdeb;font-size:11px}
+  .msg b{font-weight:600}
+  /* Interactive list buttons */
+  .list-card{background:var(--wa-in);border-radius:9px;border-top-left-radius:2px;max-width:82%;margin-bottom:6px;overflow:hidden;animation:pop .18s ease-out}
+  .list-card .body{padding:8px 10px;color:var(--wa-text);font-size:14.3px;line-height:1.4}
+  .list-card .opt{
+    border-top:1px solid rgba(134,150,160,.15);padding:11px 10px;text-align:center;
+    color:#53bdeb;font-size:14px;cursor:pointer;user-select:none;transition:background .15s;
+  }
+  .list-card .opt:active,.list-card .opt:hover{background:rgba(83,189,235,.08)}
+  .list-card .opt small{display:block;color:var(--wa-sub);font-size:11.5px;margin-top:2px}
+  /* Typing */
+  .typing{display:flex;gap:4px;padding:12px 14px;background:var(--wa-in);border-radius:9px;border-top-left-radius:2px;width:fit-content;margin-bottom:6px}
+  .typing span{width:7px;height:7px;border-radius:50%;background:var(--wa-sub);animation:blink 1.2s infinite}
+  .typing span:nth-child(2){animation-delay:.2s}
+  .typing span:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.3}30%{opacity:1}}
+  /* Input */
+  .wa-input{
+    display:flex;align-items:center;gap:8px;padding:8px 10px 10px;background:var(--wa-header);flex-shrink:0;
+  }
+  .wa-input input{
+    flex:1;background:#2a3942;border:none;outline:none;border-radius:22px;
+    padding:11px 16px;color:var(--wa-text);font-size:15px;
+  }
+  .wa-input input::placeholder{color:var(--wa-sub)}
+  .send{
+    width:44px;height:44px;border-radius:50%;background:var(--wa-accent);border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform .12s;
+  }
+  .send:active{transform:scale(.9)}
+  /* Quick chips for demo */
+  .chips{display:flex;gap:6px;padding:6px 10px;background:var(--wa-header);overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{
+    flex-shrink:0;background:#2a3942;color:#8fd3c9;border:1px solid rgba(0,168,132,.3);
+    border-radius:16px;padding:6px 13px;font-size:12.5px;cursor:pointer;user-select:none;transition:background .15s;
+  }
+  .chip:active,.chip:hover{background:rgba(0,168,132,.15)}
+  @media(max-width:430px){
+    body{padding:0}
+    .phone{width:100%;height:100vh;height:100dvh;max-height:none;border-radius:0;box-shadow:none}
+    .demo-label{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="demo-label">Vista previa · demo funcional</div>
+<div class="phone">
+  <div class="wa-header">
+    <div class="wa-avatar">✈️</div>
+    <div class="wa-title">
+      <h1>Cumbre 2026 AT&amp;T
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="#00a884"><path d="M12 2 9.1 4.6l-3.9.4-.4 3.9L2 12l2.8 3.1.4 3.9 3.9.4L12 22l3.1-2.6 3.9-.4.4-3.9L22 12l-2.6-3.1-.4-3.9-3.9-.4L12 2zm-1.6 13.6-3-3 1.4-1.4 1.6 1.6 4.8-4.8 1.4 1.4-6.2 6.2z"/></svg>
+      </h1>
+      <p>Asistente de vuelos · en línea</p>
+    </div>
+    <div class="wa-icons">
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor"><path d="M15.9 14.3h-.8l-.3-.3a6.5 6.5 0 1 0-.7.7l.3.3v.8l5 5 1.5-1.5-5-5zm-6 0a4.5 4.5 0 1 1 0-9 4.5 4.5 0 0 1 0 9z"/></svg>
+      <svg width="4" height="18" viewBox="0 0 4 16" fill="currentColor"><circle cx="2" cy="2" r="2"/><circle cx="2" cy="8" r="2"/><circle cx="2" cy="14" r="2"/></svg>
+    </div>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="day-chip">Hoy</div>
+  </div>
+
+  <div class="chips" id="chips">
+    <div class="chip" data-t="Hola">Hola</div>
+    <div class="chip" data-t="1">1 · Mi vuelo</div>
+    <div class="chip" data-t="2">2 · Hotel</div>
+    <div class="chip" data-t="menu">menu</div>
+    <div class="chip" data-t="María García">María García (homónimos)</div>
+    <div class="chip" data-t="Pedro Pérez">Nombre inexistente</div>
+  </div>
+
+  <div class="wa-input">
+    <input id="inp" type="text" placeholder="Escribe un mensaje" autocomplete="off">
+    <button class="send" id="btn" aria-label="Enviar">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="#0b141a"><path d="M2 21l21-9L2 3v7l15 2-15 2z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   DEMO · Bot Cumbre 2026 — misma lógica que tendrá producción
+   Datos de ejemplo embebidos (en producción: Google Sheets)
+   ============================================================ */
+const PASAJEROS = [
+  {nombre:"María García López",    aerolinea:"Aeroméxico", vueloIda:"AM 512",  fechaIda:"12 Ago", horaIda:"07:45", ruta:"MEX → CUN", vueloReg:"AM 519", fechaReg:"15 Ago", horaReg:"18:20", notas:"Terminal 2 · Grupo A"},
+  {nombre:"María García Fernández",aerolinea:"Volaris",    vueloIda:"Y4 803",  fechaIda:"12 Ago", horaIda:"09:10", ruta:"GDL → CUN", vueloReg:"Y4 810", fechaReg:"15 Ago", horaReg:"20:05", notas:"Terminal 1 · Grupo B"},
+  {nombre:"Carlos Hernández Ruiz", aerolinea:"Aeroméxico", vueloIda:"AM 640",  fechaIda:"12 Ago", horaIda:"06:30", ruta:"MTY → CUN", vueloReg:"AM 647", fechaReg:"15 Ago", horaReg:"17:00", notas:"Grupo A"},
+  {nombre:"Ana Sofía Martínez",    aerolinea:"VivaAerobus",vueloIda:"VB 1201", fechaIda:"12 Ago", horaIda:"11:25", ruta:"TIJ → CUN", vueloReg:"VB 1208",fechaReg:"15 Ago", horaReg:"14:40", notas:"Grupo C"},
+  {nombre:"Jorge Ramírez Castillo",aerolinea:"Volaris",    vueloIda:"Y4 455",  fechaIda:"12 Ago", horaIda:"08:00", ruta:"MEX → CUN", vueloReg:"Y4 462", fechaReg:"15 Ago", horaReg:"19:30", notas:"Terminal 1 · Grupo A"},
+  {nombre:"Lucía Torres Mendoza",  aerolinea:"Aeroméxico", vueloIda:"AM 512",  fechaIda:"12 Ago", horaIda:"07:45", ruta:"MEX → CUN", vueloReg:"AM 519", fechaReg:"15 Ago", horaReg:"18:20", notas:"Terminal 2 · Grupo A"},
+];
+
+const MENU = `✈️ *CUMBRE 2026 AT&T*
+¿Cómo te puedo ayudar?
+
+1. Información de mi vuelo
+2. Información del hotel
+3. Cómo preparar mi equipaje
+4. ¿Qué documentación debo llevar?
+5. ¿Qué tipo de vestimenta debo usar?
+6. Hablar con un operador
+
+_Para regresar al menú principal escribe *menu*._`;
+
+const HOTEL = `🏨 *INFO HOTEL*
+El *Hard Rock Hotel Riviera Maya* es un extenso resort todo incluido en la costa de Puerto Aventuras, a ~64 min del Aeropuerto de Cancún (CUN).
+
+📍 Carretera Cancún-Chetumal Km 72, Puerto Aventuras, Q. Roo (C.P. 77710)
+📶 WiFi: CONV2024 / Conv2024!
+🕒 Check-in: 15:00 · Check-out: 12:00`;
+
+const EQUIPAJE = `🧳 *GUÍA DE EQUIPAJE*
+• Equipaje documentado: máx. *25 kg*
+• Equipaje de mano: máx. *10 kg*
+• 1 objeto personal (bolsa/mochila pequeña)
+
+_En producción aquí se envía la infografía oficial del evento._`;
+
+const DOCS = `🪪 *DOCUMENTACIÓN (vuelos nacionales)*
+*Paso 1 — Identificación oficial vigente:*
+INE / Pasaporte / Cédula profesional / Licencia de conducir
+
+*Paso 2 — Pase de abordar:*
+Digital (obtenlo en línea hasta 2 h antes) o físico (imprímelo en el aeropuerto).`;
+
+const VESTIMENTA = `👔 *VESTIMENTA*
+• Sesiones de trabajo: casual de negocios
+• Cena de gala (13 Ago): formal
+• Actividades de playa: ropa ligera, traje de baño, bloqueador
+
+Clima esperado en Riviera Maya: 28-33 °C.`;
+
+const OPERADOR = `👤 Un operador del staff te contactará en breve.
+Horario de atención: 8:00 – 22:00.
+También puedes llamar al +52 55 0000 0000.
+
+Escribe *menu* para volver.`;
+
+/* ---------- estado ---------- */
+let esperandoNombre = false;
+const chat = document.getElementById("chat");
+const inp  = document.getElementById("inp");
+
+const hora = () => new Date().toLocaleTimeString("es-MX",{hour:"2-digit",minute:"2-digit",hour12:false});
+const fmt  = s => s.replace(/\*([^*]+)\*/g,"<b>$1</b>").replace(/_([^_]+)_/g,"<i>$1</i>");
+
+function scrollDown(){ chat.scrollTop = chat.scrollHeight; }
+
+function addMsg(text, who){
+  const d = document.createElement("div");
+  d.className = "msg " + who;
+  d.innerHTML = fmt(text) + `<span class="time">${hora()}</span>`;
+  chat.appendChild(d); scrollDown();
+}
+
+function addTyping(){
+  const t = document.createElement("div");
+  t.className = "typing"; t.id = "typing";
+  t.innerHTML = "<span></span><span></span><span></span>";
+  chat.appendChild(t); scrollDown();
+}
+function rmTyping(){ document.getElementById("typing")?.remove(); }
+
+function botSay(text, delay=700){
+  addTyping();
+  setTimeout(()=>{ rmTyping(); addMsg(text,"in"); }, delay);
+}
+
+function botList(bodyText, opciones, delay=700){
+  addTyping();
+  setTimeout(()=>{
+    rmTyping();
+    const card = document.createElement("div");
+    card.className = "list-card";
+    card.innerHTML = `<div class="body">${fmt(bodyText)}</div>`;
+    opciones.forEach(o=>{
+      const opt = document.createElement("div");
+      opt.className = "opt";
+      opt.innerHTML = `${o.title}<small>${o.desc}</small>`;
+      opt.onclick = ()=>{ addMsg(o.title,"out"); botSay(formatVuelo(o.p), 800); esperandoNombre=false; };
+      card.appendChild(opt);
+    });
+    chat.appendChild(card); scrollDown();
+  }, delay);
+}
+
+/* ---------- lógica del bot (idéntica a producción) ---------- */
+const norm = s => (s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[^a-z0-9ñ ]/gi," ").replace(/\s+/g," ").trim();
+
+function buscar(q){
+  const toks = norm(q).split(" ").filter(t=>t.length>1);
+  if(!toks.length) return [];
+  return PASAJEROS.filter(p => toks.every(t => norm(p.nombre).includes(t)));
+}
+
+function formatVuelo(p){
+  return `✈️ *Itinerario de ${p.nombre}*
+
+*IDA* — ${p.aerolinea} ${p.vueloIda}
+${p.fechaIda} · ${p.horaIda} · ${p.ruta}
+
+*REGRESO* — ${p.aerolinea} ${p.vueloReg}
+${p.fechaReg} · ${p.horaReg}
+
+📌 ${p.notas}
+
+_Llega al aeropuerto 2 horas antes de tu vuelo._
+Escribe *menu* para volver.`;
+}
+
+function procesar(text){
+  const t = norm(text);
+
+  if(t === "menu" || t === "menú"){ esperandoNombre=false; botSay(MENU); return; }
+
+  if(esperandoNombre){
+    const m = buscar(text);
+    if(m.length === 1){ esperandoNombre=false; botSay(formatVuelo(m[0]), 900); return; }
+    if(m.length >= 2){
+      botList("Encontré varias personas con ese nombre. ¿Cuál eres tú?",
+        m.map(p=>({title:p.nombre, desc:`${p.aerolinea} ${p.vueloIda} · ${p.fechaIda}`, p})));
+      return;
+    }
+    botSay(`Tu nombre no fue encontrado. 🔎
+Intenta de nuevo revisando la ortografía (nombre y apellidos como te registraste).
+
+Si el problema continúa escribe *6* para hablar con un operador, o *menu* para volver.`);
+    return;
+  }
+
+  // Menú con equals estricto (no contains)
+  switch(t){
+    case "1": esperandoNombre=true; botSay("✈️ ¿Podrías indicarme tu *nombre completo*?"); return;
+    case "2": botSay(HOTEL); return;
+    case "3": botSay(EQUIPAJE); return;
+    case "4": botSay(DOCS); return;
+    case "5": botSay(VESTIMENTA); return;
+    case "6": botSay(OPERADOR); return;
+  }
+
+  if(["hola","hi","buenas","buenos dias","buenas tardes","buenas noches","hey","inicio"].some(g=>t===g||t.startsWith(g+" "))){
+    botSay(MENU); return;
+  }
+
+  botSay("No entendí tu mensaje. 🙂\nEscribe el *número* de la opción deseada o *menu* para ver las opciones.");
+}
+
+/* ---------- envío ---------- */
+function enviar(text){
+  const v = (text ?? inp.value).trim();
+  if(!v) return;
+  addMsg(v,"out");
+  inp.value = "";
+  procesar(v);
+}
+document.getElementById("btn").onclick = ()=>enviar();
+inp.addEventListener("keydown", e=>{ if(e.key==="Enter") enviar(); });
+document.querySelectorAll(".chip").forEach(c=> c.onclick = ()=>enviar(c.dataset.t));
+
+/* saludo inicial */
+setTimeout(()=>botSay(MENU, 900), 500);
+</script>
+</body>
+</html>
